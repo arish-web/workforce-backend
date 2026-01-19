@@ -2,7 +2,7 @@
   "name": "workforce-backend",
   "version": "1.0.0",
   "main": "index.js",
-    "scripts": {
+  "scripts": {
     "build": "prisma generate && tsc --noEmitOnError false",
     "start": "node dist/server.js",
     "dev": "ts-node-dev src/server.ts",
@@ -14,7 +14,7 @@
   "description": "",
   "dependencies": {
     "@prisma/adapter-pg": "^7.2.0",
-    "@prisma/client": "^7.2.0",
+    "@prisma/client": "^5.22.0",
     "bcrypt": "^6.0.0",
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
@@ -22,7 +22,7 @@
     "helmet": "^8.1.0",
     "jsonwebtoken": "^9.0.3",
     "pg": "^8.17.1",
-    "prisma": "^7.2.0",
+    "prisma": "^5.22.0",
     "zod": "^4.3.5"
   },
   "devDependencies": {
