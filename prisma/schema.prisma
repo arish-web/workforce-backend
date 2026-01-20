@@ -8,10 +8,20 @@ generator client {
 }
 
 model User {
+  id         String   @id @default(uuid())
+  email      String   @unique
+  password   String
+  role       Role
+  isActive   Boolean  @default(true)
+  locationId String?  
+  location   Location? @relation(fields: [locationId], references: [id])
+  createdAt  DateTime @default(now())
+}
+
+model Location {
   id        String   @id @default(uuid())
-  email     String   @unique
-  password  String
-  role      Role
+  name      String
+  users     User[]
   createdAt DateTime @default(now())
 }
 

@@ -1,39 +1,15 @@
-// import "dotenv/config";
-// import bcrypt from "bcrypt";
-// import { prisma } from "./config/prisma";
-
-// async function main() {
-//   const password = await bcrypt.hash("12345678", 10);
-
-//   await prisma.user.create({
-//     data: {
-//       email: "admin@test.com",
-//       password,
-//       role: "ADMIN",
-//     },
-//   });
-
-//   console.log("Admin user created");
-// }
-
-// main()
-//   .catch(console.error)
-//   .finally(() => prisma.$disconnect());
-
-
-import { PrismaClient } from "@prisma/client";
-import bcrypt from "bcrypt";
 import { prisma } from "./config/prisma";
+import bcrypt from "bcryptjs";
 
 async function main() {
   const password = await bcrypt.hash("12345678", 10);
 
   // ADMIN
   await prisma.user.upsert({
-    where: { email: "admin@test.com" },
+    where: { email: "admin@gmail.com" },
     update: {},
     create: {
-      email: "admin@test.com",
+      email: "admin@gmail.com",
       password,
       role: "ADMIN",
     },
@@ -41,10 +17,10 @@ async function main() {
 
   // MANAGER
   await prisma.user.upsert({
-    where: { email: "manager@test.com" },
+    where: { email: "manager@gmail.com" },
     update: {},
     create: {
-      email: "manager@test.com",
+      email: "manager@gmail.com",
       password,
       role: "MANAGER",
     },
@@ -52,18 +28,23 @@ async function main() {
 
   // EMPLOYEE
   await prisma.user.upsert({
-    where: { email: "employee@test.com" },
+    where: { email: "employee@gmail.com" },
     update: {},
     create: {
-      email: "employee@test.com",
+      email: "employee@gmail.com",
       password,
       role: "EMPLOYEE",
     },
   });
 
-  console.log("Admin, Manager, Employee users created");
+  console.log("Seeded: ADMIN, MANAGER, EMPLOYEE");
 }
 
 main()
-  .catch(console.error)
-  .finally(() => prisma.$disconnect());
+  .catch((e) => {
+    console.error(e);
+    process.exit(1);
+  })
+  .finally(async () => {
+    await prisma.$disconnect();
+  });

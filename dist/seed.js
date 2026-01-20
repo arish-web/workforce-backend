@@ -1,47 +1,49 @@
 "use strict";
-// import "dotenv/config";
-// import bcrypt from "bcrypt";
-// import { prisma } from "./config/prisma";
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const bcrypt_1 = __importDefault(require("bcrypt"));
 const prisma_1 = require("./config/prisma");
+const bcryptjs_1 = __importDefault(require("bcryptjs"));
 async function main() {
-    const password = await bcrypt_1.default.hash("12345678", 10);
+    const password = await bcryptjs_1.default.hash("12345678", 10);
     // ADMIN
     await prisma_1.prisma.user.upsert({
-        where: { email: "admin@test.com" },
+        where: { email: "admin@gmail.com" },
         update: {},
         create: {
-            email: "admin@test.com",
+            email: "admin@gmail.com",
             password,
             role: "ADMIN",
         },
     });
     // MANAGER
     await prisma_1.prisma.user.upsert({
-        where: { email: "manager@test.com" },
+        where: { email: "manager@gmail.com" },
         update: {},
         create: {
-            email: "manager@test.com",
+            email: "manager@gmail.com",
             password,
             role: "MANAGER",
         },
     });
     // EMPLOYEE
     await prisma_1.prisma.user.upsert({
-        where: { email: "employee@test.com" },
+        where: { email: "employee@gmail.com" },
         update: {},
         create: {
-            email: "employee@test.com",
+            email: "employee@gmail.com",
             password,
             role: "EMPLOYEE",
         },
     });
-    console.log("Admin, Manager, Employee users created");
+    console.log("Seeded: ADMIN, MANAGER, EMPLOYEE");
 }
 main()
-    .catch(console.error)
-    .finally(() => prisma_1.prisma.$disconnect());
+    .catch((e) => {
+    console.error(e);
+    process.exit(1);
+})
+    .finally(async () => {
+    await prisma_1.prisma.$disconnect();
+});
