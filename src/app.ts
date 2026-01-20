@@ -1,13 +1,13 @@
 import express from "express";
 import cors from "cors";
 import helmet from "helmet";
-import authRoutes from "../src/routes/auth.routes";
-import adminEmployeeRoutes from "../src/routes/admin.employee.routes";
-import adminLocationRoutes from "../src/routes/admin.location.routes";
-import managerEmployeeRoutes from "../src/routes/manager.employee.routes";
-import { errorHandler } from "../src/middlewares/error.middleware";
-import locationRoutes from "../src/routes/location.routes";
-import employeeRoutes from "../src/routes/employee.routes"
+import authRoutes from "./routes/auth.routes";
+import adminEmployeeRoutes from "./routes/admin.employee.routes";
+import adminLocationRoutes from "./routes/admin.location.routes";
+import managerEmployeeRoutes from "./routes/manager.employee.routes";
+import { errorHandler } from "./middlewares/error.middleware";
+import locationRoutes from "./routes/location.routes";
+import employeeRoutes from "./routes/employee.routes"
 
 
 
