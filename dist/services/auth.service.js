@@ -3,38 +3,27 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.refreshAccessToken = void 0;
 exports.loginUser = loginUser;
 exports.registerUser = registerUser;
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const prisma_1 = require("../config/prisma");
 const jwt_1 = require("../utils/jwt");
+const jwt_2 = require("../utils/jwt");
 async function loginUser(email, password) {
-    const user = await prisma_1.prisma.user.findUnique({
-        where: { email },
-    });
-    if (!user) {
+    const user = await prisma_1.prisma.user.findUnique({ where: { email } });
+    if (!user)
         throw new Error("Invalid credentials");
-    }
-    let isValidPassword = false;
-    if (user.password.startsWith("$2")) {
-        isValidPassword = await bcryptjs_1.default.compare(password, user.password);
-    }
-    else {
-        isValidPassword = password === user.password;
-    }
-    if (!isValidPassword) {
+    const isMatch = await bcryptjs_1.default.compare(password, user.password);
+    if (!isMatch)
         throw new Error("Invalid credentials");
-    }
-    console.log("DB PASSWORD:", user.password);
-    console.log("INPUT PASSWORD:", password);
+    const payload = { userId: user.id, role: user.role };
+    const accessToken = (0, jwt_1.signAccessToken)(payload);
+    const refreshToken = (0, jwt_1.signRefreshToken)(payload);
+    console.log("refreshToken", refreshToken);
     return {
-        accessToken: (0, jwt_1.signAccessToken)({
-            userId: user.id,
-            role: user.role,
-        }),
-        refreshToken: (0, jwt_1.signRefreshToken)({
-            userId: user.id,
-        }),
+        accessToken,
+        refreshToken, // ✅
         user: {
             id: user.id,
             email: user.email,
@@ -63,3 +52,15 @@ async function registerUser(email, password, role) {
         role: user.role,
     };
 }
+const refreshAccessToken = (refreshToken) => {
+    if (!refreshToken) {
+        throw new Error("Refresh token missing");
+    }
+    const decoded = (0, jwt_2.verifyRefreshToken)(refreshToken);
+    const newAccessToken = (0, jwt_1.signAccessToken)({
+        userId: decoded.userId,
+        role: decoded.role,
+    });
+    return { accessToken: newAccessToken };
+};
+exports.refreshAccessToken = refreshAccessToken;

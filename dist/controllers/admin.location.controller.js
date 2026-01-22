@@ -2,12 +2,19 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.listLocations = exports.createLocation = void 0;
 const prisma_1 = require("../config/prisma");
-const createLocation = async (req, res) => {
-    const { name } = req.body;
+const createLocation = async (_req, res) => {
+    const { name, organizationId, managerId } = _req.body;
+    if (!organizationId) {
+        return res.status(400).json({ message: "organizationId is required" });
+    }
     const location = await prisma_1.prisma.location.create({
-        data: { name },
+        data: {
+            name,
+            organizationId, // ✅ REQUIRED
+            managerId: managerId || null,
+        },
     });
-    res.status(201).json(location);
+    res.json(location);
 };
 exports.createLocation = createLocation;
 const listLocations = async (_req, res) => {

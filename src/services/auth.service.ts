@@ -1,39 +1,26 @@
 import bcrypt from "bcryptjs";
 import { prisma } from "../config/prisma";
 import { signAccessToken, signRefreshToken } from "../utils/jwt";
+import { verifyRefreshToken } from "../utils/jwt";
+
+
 
 export async function loginUser(email: string, password: string) {
-  const user = await prisma.user.findUnique({
-    where: { email },
-  });
+  const user = await prisma.user.findUnique({ where: { email } });
+  if (!user) throw new Error("Invalid credentials");
 
-  if (!user) {
-    throw new Error("Invalid credentials");
-  }
+  const isMatch = await bcrypt.compare(password, user.password);
+  if (!isMatch) throw new Error("Invalid credentials");
 
-  let isValidPassword = false;
+  const payload = { userId: user.id, role: user.role };
 
-  if (user.password.startsWith("$2")) {
-    isValidPassword = await bcrypt.compare(password, user.password);
-  } else {
-    isValidPassword = password === user.password;
-  }
+  const accessToken = signAccessToken(payload);
+  const refreshToken = signRefreshToken(payload);
 
-  if (!isValidPassword) {
-    throw new Error("Invalid credentials");
-  }
-
-  console.log("DB PASSWORD:", user.password);
-console.log("INPUT PASSWORD:", password);
-
+  console.log("refreshToken",  refreshToken)
   return {
-    accessToken: signAccessToken({
-      userId: user.id,
-      role: user.role,
-    }),
-    refreshToken: signRefreshToken({
-      userId: user.id,
-    }),
+    accessToken,
+    refreshToken, // ✅
     user: {
       id: user.id,
       email: user.email,
@@ -41,6 +28,7 @@ console.log("INPUT PASSWORD:", password);
     },
   };
 }
+
 
 export async function registerUser(
   email: string,
@@ -71,3 +59,19 @@ export async function registerUser(
     role: user.role,
   };
 }
+
+
+export const refreshAccessToken = (refreshToken: string) => {
+  if (!refreshToken) {
+    throw new Error("Refresh token missing");
+  }
+
+  const decoded = verifyRefreshToken(refreshToken) as any;
+
+  const newAccessToken = signAccessToken({
+    userId: decoded.userId,
+    role: decoded.role,
+  });
+
+  return { accessToken: newAccessToken };
+};

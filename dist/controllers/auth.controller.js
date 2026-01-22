@@ -1,10 +1,12 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.refreshToken = void 0;
 exports.login = login;
 exports.register = register;
 exports.me = me;
 const auth_service_1 = require("../services/auth.service");
 const auth_schema_1 = require("../validators/auth.schema");
+const jwt_1 = require("../utils/jwt");
 async function login(req, res) {
     try {
         const body = auth_schema_1.loginSchema.parse(req.body);
@@ -17,6 +19,36 @@ async function login(req, res) {
         return res.status(401).json({ message: err.message });
     }
 }
+// export const refreshToken = (req: Request, res: Response) => {
+//   try {
+//     const { refreshToken } = req.body;
+//     const token = refreshAccessToken(refreshToken);
+//     res.json(token);
+//   } catch (err: any) {
+//     res.status(401).json({ message: err.message });
+//   }
+// };
+const refreshToken = (req, res) => {
+    const { refreshToken } = req.body;
+    console.log("refreshToken", refreshToken);
+    if (!refreshToken) {
+        return res.status(401).json({ message: "Refresh token missing" });
+    }
+    try {
+        const decoded = (0, jwt_1.verifyRefreshToken)(refreshToken);
+        const newAccessToken = (0, jwt_1.signAccessToken)({
+            id: decoded.userI,
+            role: decoded.role,
+        });
+        return res.json({
+            accessToken: newAccessToken,
+        });
+    }
+    catch {
+        return res.status(403).json({ message: "Invalid refresh token" });
+    }
+};
+exports.refreshToken = refreshToken;
 async function register(req, res) {
     try {
         const body = auth_schema_1.registerSchema.parse(req.body);

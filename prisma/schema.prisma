@@ -7,26 +7,94 @@ generator client {
   provider = "prisma-client-js"
 }
 
-model User {
-  id         String   @id @default(uuid())
-  email      String   @unique
-  password   String
-  role       Role
-  isActive   Boolean  @default(true)
-  locationId String?  
-  location   Location? @relation(fields: [locationId], references: [id])
-  createdAt  DateTime @default(now())
-}
-
-model Location {
-  id        String   @id @default(uuid())
-  name      String
-  users     User[]
-  createdAt DateTime @default(now())
-}
-
 enum Role {
   ADMIN
   MANAGER
   EMPLOYEE
+}
+
+enum TaskStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  OVERDUE
+}
+
+model User {
+  id       String  @id @default(uuid())
+  email    String  @unique
+  password String
+  role     Role
+  isActive Boolean @default(true)
+
+  // employee → location
+  locationId String?
+  location   Location? @relation("EmployeeLocation", fields: [locationId], references: [id])
+
+  // manager → managed locations
+  managedLocations Location[] @relation("LocationManager")
+
+  // employee → assigned tasks
+  assignedTasks Task[] @relation("AssignedTasks")
+
+  createdAt DateTime @default(now())
+}
+
+model Location {
+  id             String  @id @default(uuid())
+  name           String
+  organizationId String
+  managerId      String?
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+
+  // manager relation
+  manager User? @relation("LocationManager", fields: [managerId], references: [id])
+
+  // employees
+  users User[] @relation("EmployeeLocation")
+
+  // tasks under this location
+  tasks Task[]
+
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+}
+
+model Organization {
+  id        String    @id @default(uuid())
+  name      String
+  isActive  Boolean   @default(true)
+  deletedAt DateTime?
+
+  locations Location[]
+
+  createdAt DateTime @default(now())
+}
+
+model Task {
+  id       String     @id @default(uuid())
+  title    String
+  status   TaskStatus
+  deadline DateTime
+
+  locationId String
+  location   Location @relation(fields: [locationId], references: [id])
+
+  assignedToId String
+  assignedTo   User   @relation("AssignedTasks", fields: [assignedToId], references: [id])
+
+  comments Comment[]
+
+  createdAt DateTime @default(now())
+}
+
+model Comment {
+  id      String @id @default(uuid())
+  comment String
+
+  taskId String
+  task   Task   @relation(fields: [taskId], references: [id])
+
+  createdAt DateTime @default(now())
 }
