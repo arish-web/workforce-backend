@@ -5,7 +5,7 @@ import express from "express";
 import cors from "cors";
 import helmet from "helmet";
 import managerRoutes from "./api/v1/manager.routes";
-import authRoutes from "../src/routes/auth.routes";
+import authRoutes from "./api/v1/auth.routes";
 import adminEmployeeRoutes from "./routes/admin.employee.routes";
 import adminLocationRoutes from "./routes/admin.location.routes";
 import { errorHandler } from "./middlewares/error.middleware";
