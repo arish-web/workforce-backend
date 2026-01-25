@@ -1,11 +1,11 @@
-import { Router } from "express";
-import { getManagerEmployees } from "../controllers/manager.employee.controller";
-import { requireAuth } from "../middlewares/auth.middleware";
+// import { Router } from "express";
+// import { getManagerEmployees } from "../controllers/manager.employee.controller";
+// import { requireAuth } from "../middlewares/auth.middleware";
 
-const router = Router();
+// const router = Router();
 
-router.use(requireAuth(["MANAGER"]));
+// router.use(requireAuth(["MANAGER"]));
 
-router.get("/employees", getManagerEmployees);
+// router.get("/employees", getManagerEmployees);
 
-export default router;
+// export default router;

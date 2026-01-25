@@ -11,7 +11,7 @@ const signAccessToken = (payload) => {
         throw new Error("JWT_ACCESS_SECRET is missing");
     }
     return jsonwebtoken_1.default.sign(payload, secret, {
-        expiresIn: "10h",
+        expiresIn: "1m",
     });
 };
 exports.signAccessToken = signAccessToken;

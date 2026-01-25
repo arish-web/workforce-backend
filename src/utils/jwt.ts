@@ -7,7 +7,7 @@ export const signAccessToken = (payload: object) => {
   }
 
   return jwt.sign(payload, secret, {
-    expiresIn: "3h",
+    expiresIn: "1m",
   });
 };
 

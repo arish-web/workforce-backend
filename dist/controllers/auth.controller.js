@@ -28,17 +28,37 @@ async function login(req, res) {
 //     res.status(401).json({ message: err.message });
 //   }
 // };
+// export const refreshToken = (req: Request, res: Response) => {
+//   const { refreshToken } = req.body;
+//   console.log("refreshToken",   refreshToken)
+//   if (!refreshToken) {
+//     return res.status(401).json({ message: "Refresh token missing" });
+//   }
+//   try {
+//     const decoded = verifyRefreshToken(refreshToken) as any;
+//     const newAccessToken = signAccessToken({
+//       id: decoded.userId,
+//       role: decoded.role,
+//     });
+//     return res.json({
+//       accessToken: newAccessToken,
+//     });
+//   } catch {
+//     return res.status(403).json({ message: "Invalid refresh token" });
+//   }
+// };
 const refreshToken = (req, res) => {
     const { refreshToken } = req.body;
-    console.log("refreshToken", refreshToken);
     if (!refreshToken) {
         return res.status(401).json({ message: "Refresh token missing" });
     }
     try {
+        // const decoded = verifyRefreshToken(refreshToken) as any;
         const decoded = (0, jwt_1.verifyRefreshToken)(refreshToken);
         const newAccessToken = (0, jwt_1.signAccessToken)({
-            id: decoded.userI,
+            userId: decoded.userId, // ✅ THIS MUST BE userId
             role: decoded.role,
+            email: decoded.email, // optional but good
         });
         return res.json({
             accessToken: newAccessToken,

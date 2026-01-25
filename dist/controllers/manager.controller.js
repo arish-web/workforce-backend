@@ -1,73 +1,110 @@
 "use strict";
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || (function () {
-    var ownKeys = function(o) {
-        ownKeys = Object.getOwnPropertyNames || function (o) {
-            var ar = [];
-            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
-            return ar;
-        };
-        return ownKeys(o);
-    };
-    return function (mod) {
-        if (mod && mod.__esModule) return mod;
-        var result = {};
-        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
-        __setModuleDefault(result, mod);
-        return result;
-    };
-})();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.createManagerTask = exports.getManagerTaskById = exports.listManagerTasks = exports.listManagerEmployees = exports.getManagerDashboardSummary = void 0;
-const managerService = __importStar(require("../services/manager.service"));
+exports.getManagerEmployees = exports.createManagerTask = exports.getManagerDashboardSummary = exports.getManagerTasks = void 0;
+const prisma_1 = require("../config/prisma");
+/* ================= GET TASKS ================= */
+const getManagerTasks = async (req, res) => {
+    try {
+        const managerId = req.user.userId;
+        const tasks = await prisma_1.prisma.task.findMany({
+            where: { managerId },
+            include: {
+                assignedTo: {
+                    select: { id: true, email: true },
+                },
+            },
+            orderBy: { createdAt: "desc" },
+        });
+        return res.json(tasks.map((t) => ({
+            id: t.id,
+            title: t.title,
+            status: t.status,
+            priority: t.priority,
+            dueDate: t.dueDate,
+            assignedTo: t.assignedTo,
+        })));
+    }
+    catch (err) {
+        console.error("GET MANAGER TASKS ERROR:", err);
+        return res.status(500).json({ message: "Failed to fetch tasks" });
+    }
+};
+exports.getManagerTasks = getManagerTasks;
 const getManagerDashboardSummary = async (req, res) => {
-    const managerId = req.user.userId;
-    const data = await managerService.getDashboardSummary(managerId);
-    return res.json(data);
+    try {
+        const managerId = req.user.userId;
+        const tasks = await prisma_1.prisma.task.findMany({
+            where: { managerId },
+            select: {
+                status: true,
+                dueDate: true,
+            },
+        });
+        const now = new Date();
+        const summary = {
+            totalTasks: tasks.length,
+            pending: 0,
+            inProgress: 0,
+            completed: 0,
+            overdue: 0,
+        };
+        for (const task of tasks) {
+            if (task.status === "PENDING")
+                summary.pending++;
+            if (task.status === "IN_PROGRESS")
+                summary.inProgress++;
+            if (task.status === "COMPLETED")
+                summary.completed++;
+            if (task.dueDate &&
+                new Date(task.dueDate) < now &&
+                task.status !== "COMPLETED") {
+                summary.overdue++;
+            }
+        }
+        return res.json(summary);
+    }
+    catch (err) {
+        console.error("GET MANAGER DASHBOARD SUMMARY ERROR:", err);
+        return res.status(500).json({ message: "Failed to load dashboard summary" });
+    }
 };
 exports.getManagerDashboardSummary = getManagerDashboardSummary;
-const listManagerEmployees = async (req, res) => {
-    const managerId = req.user.userId;
-    const data = await managerService.getEmployees(managerId);
-    return res.json(data);
-};
-exports.listManagerEmployees = listManagerEmployees;
-const listManagerTasks = async (req, res) => {
-    const managerId = req.user.userId;
-    const data = await managerService.getTasks(managerId);
-    return res.json(data);
-};
-exports.listManagerTasks = listManagerTasks;
-const getManagerTaskById = async (req, res) => {
-    const managerId = req.user.userId;
-    const taskId = String(req.params.id);
-    const task = await managerService.getTaskById(managerId, taskId);
-    return res.json(task);
-};
-exports.getManagerTaskById = getManagerTaskById;
+/* ================= CREATE TASK ================= */
 const createManagerTask = async (req, res) => {
-    const managerId = req.user.userId;
-    const { title, employeeId, deadline } = req.body;
-    await managerService.createTask(managerId, {
-        title,
-        employeeId,
-        deadline,
-    });
-    return res.status(201).json({ message: "Task created" });
+    try {
+        const { title, dueDate, priority, assignedTo } = req.body;
+        if (!title || !dueDate || !assignedTo) {
+            return res.status(400).json({ message: "Missing fields" });
+        }
+        const task = await prisma_1.prisma.task.create({
+            data: {
+                title,
+                dueDate: new Date(dueDate),
+                priority: priority || "MEDIUM",
+                status: "PENDING",
+                managerId: req.user.userId,
+                assignedToId: assignedTo,
+            },
+        });
+        return res.status(201).json(task);
+    }
+    catch (err) {
+        console.error("CREATE TASK ERROR:", err);
+        return res.status(500).json({ message: "Failed to create task" });
+    }
 };
 exports.createManagerTask = createManagerTask;
+/* ================= EMPLOYEES ================= */
+const getManagerEmployees = async (_req, res) => {
+    try {
+        const employees = await prisma_1.prisma.user.findMany({
+            where: { role: "EMPLOYEE" },
+            select: { id: true, email: true },
+        });
+        return res.json(employees);
+    }
+    catch (err) {
+        return res.status(500).json({ message: "Failed to fetch employees" });
+    }
+};
+exports.getManagerEmployees = getManagerEmployees;

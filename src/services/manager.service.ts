@@ -92,14 +92,48 @@ export async function getTaskById(managerId: string, taskId: string) {
   return task;
 }
 
+// export async function createTask(
+//   managerId: string,
+//   payload: { title: string; employeeId: string; deadline: string }
+// ) {
+//   // ensure employee belongs to manager’s location
+//   const employee = await prisma.user.findFirst({
+//     where: {
+//       id: payload.employeeId,
+//       role: "EMPLOYEE",
+//       location: {
+//         managerId,
+//       },
+//     },
+//   });
+
+//   if (!employee) throw new Error("Invalid employee");
+
+//   await prisma.task.create({
+//     data: {
+//       title: payload.title,
+//       deadline: new Date(payload.deadline),
+//       assignedToId: payload.employeeId,
+//       locationId: employee.locationId!,
+//       status: "PENDING",
+//     },
+//   });
+// }
+
+
 export async function createTask(
   managerId: string,
-  payload: { title: string; employeeId: string; deadline: string }
+  payload: {
+    title: string;
+    assignedTo: string;
+    dueDate: string;
+    priority: string;
+  }
 ) {
   // ensure employee belongs to manager’s location
   const employee = await prisma.user.findFirst({
     where: {
-      id: payload.employeeId,
+      id: payload.assignedTo,
       role: "EMPLOYEE",
       location: {
         managerId,
@@ -107,15 +141,20 @@ export async function createTask(
     },
   });
 
-  if (!employee) throw new Error("Invalid employee");
+  if (!employee) {
+    throw new Error("Invalid employee");
+  }
 
-  await prisma.task.create({
-    data: {
-      title: payload.title,
-      deadline: new Date(payload.deadline),
-      assignedToId: payload.employeeId,
-      locationId: employee.locationId!,
-      status: "PENDING",
-    },
+  return prisma.task.create({
+  data: {
+    title: payload.title,
+    dueDate: new Date(payload.dueDate),
+    priority: payload.priority,
+    status: "PENDING",
+
+    managerId,
+    assignedToId: payload.assignedTo,
+    locationId: employee.locationId!,
+  } as any,
   });
 }

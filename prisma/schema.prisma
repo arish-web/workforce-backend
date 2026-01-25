@@ -27,15 +27,14 @@ model User {
   role     Role
   isActive Boolean @default(true)
 
-  // employee → location
   locationId String?
   location   Location? @relation("EmployeeLocation", fields: [locationId], references: [id])
 
-  // manager → managed locations
   managedLocations Location[] @relation("LocationManager")
 
-  // employee → assigned tasks
   assignedTasks Task[] @relation("AssignedTasks")
+
+  managedTasks Task[] @relation("ManagerTasks")
 
   createdAt DateTime @default(now())
 }
@@ -73,20 +72,24 @@ model Organization {
 }
 
 model Task {
-  id       String     @id @default(uuid())
-  title    String
-  status   TaskStatus
-  deadline DateTime
+  id     String     @id @default(uuid())
+  title  String
+  status TaskStatus @default(PENDING)
 
-  locationId String
-  location   Location @relation(fields: [locationId], references: [id])
+  dueDate  DateTime
+  priority String
+
+  managerId String
+  manager   User   @relation("ManagerTasks", fields: [managerId], references: [id])
+
+  locationId String?
+  location   Location? @relation(fields: [locationId], references: [id])
 
   assignedToId String
   assignedTo   User   @relation("AssignedTasks", fields: [assignedToId], references: [id])
 
-  comments Comment[]
-
-  createdAt DateTime @default(now())
+  comments  Comment[]
+  createdAt DateTime  @default(now())
 }
 
 model Comment {

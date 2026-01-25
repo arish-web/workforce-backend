@@ -1,5 +1,9 @@
 import { Request, Response } from "express";
-import { loginUser, registerUser, refreshAccessToken  } from "../services/auth.service";
+import {
+  loginUser,
+  registerUser,
+  refreshAccessToken,
+} from "../services/auth.service";
 import { loginSchema, registerSchema } from "../validators/auth.schema";
 import { AuthRequest } from "../middlewares/auth.middleware";
 import { signAccessToken, verifyRefreshToken } from "../utils/jwt";
@@ -27,20 +31,49 @@ export async function login(req: Request, res: Response) {
 //   }
 // };
 
+// export const refreshToken = (req: Request, res: Response) => {
+//   const { refreshToken } = req.body;
+//   console.log("refreshToken",   refreshToken)
+
+//   if (!refreshToken) {
+//     return res.status(401).json({ message: "Refresh token missing" });
+//   }
+
+//   try {
+//     const decoded = verifyRefreshToken(refreshToken) as any;
+
+//     const newAccessToken = signAccessToken({
+//       id: decoded.userId,
+//       role: decoded.role,
+//     });
+
+//     return res.json({
+//       accessToken: newAccessToken,
+//     });
+//   } catch {
+//     return res.status(403).json({ message: "Invalid refresh token" });
+//   }
+// };
+
 export const refreshToken = (req: Request, res: Response) => {
   const { refreshToken } = req.body;
-  console.log("refreshToken",   refreshToken)
 
   if (!refreshToken) {
     return res.status(401).json({ message: "Refresh token missing" });
   }
 
   try {
-    const decoded = verifyRefreshToken(refreshToken) as any;
+    // const decoded = verifyRefreshToken(refreshToken) as any;
+    const decoded = verifyRefreshToken(refreshToken) as {
+      userId: string;
+      role: string;
+      email?: string;
+    };
 
     const newAccessToken = signAccessToken({
-      id: decoded.userI,
+      userId: decoded.userId, // ✅ THIS MUST BE userId
       role: decoded.role,
+      email: decoded.email, // optional but good
     });
 
     return res.json({
@@ -51,16 +84,11 @@ export const refreshToken = (req: Request, res: Response) => {
   }
 };
 
-
 export async function register(req: Request, res: Response) {
   try {
     const body = registerSchema.parse(req.body);
 
-    const user = await registerUser(
-      body.email,
-      body.password,
-      body.role
-    );
+    const user = await registerUser(body.email, body.password, body.role);
 
     return res.status(201).json({
       message: "User registered successfully",
@@ -80,4 +108,3 @@ export async function me(req: AuthRequest, res: Response) {
     role: req.user?.role,
   });
 }
-

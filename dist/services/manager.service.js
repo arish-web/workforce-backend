@@ -85,26 +85,54 @@ async function getTaskById(managerId, taskId) {
         throw new Error("Task not found");
     return task;
 }
+// export async function createTask(
+//   managerId: string,
+//   payload: { title: string; employeeId: string; deadline: string }
+// ) {
+//   // ensure employee belongs to manager’s location
+//   const employee = await prisma.user.findFirst({
+//     where: {
+//       id: payload.employeeId,
+//       role: "EMPLOYEE",
+//       location: {
+//         managerId,
+//       },
+//     },
+//   });
+//   if (!employee) throw new Error("Invalid employee");
+//   await prisma.task.create({
+//     data: {
+//       title: payload.title,
+//       deadline: new Date(payload.deadline),
+//       assignedToId: payload.employeeId,
+//       locationId: employee.locationId!,
+//       status: "PENDING",
+//     },
+//   });
+// }
 async function createTask(managerId, payload) {
     // ensure employee belongs to manager’s location
     const employee = await prisma_1.prisma.user.findFirst({
         where: {
-            id: payload.employeeId,
+            id: payload.assignedTo,
             role: "EMPLOYEE",
             location: {
                 managerId,
             },
         },
     });
-    if (!employee)
+    if (!employee) {
         throw new Error("Invalid employee");
-    await prisma_1.prisma.task.create({
+    }
+    return prisma_1.prisma.task.create({
         data: {
             title: payload.title,
-            deadline: new Date(payload.deadline),
-            assignedToId: payload.employeeId,
-            locationId: employee.locationId,
+            dueDate: new Date(payload.dueDate),
+            priority: payload.priority,
             status: "PENDING",
+            managerId,
+            assignedToId: payload.assignedTo,
+            locationId: employee.locationId,
         },
     });
 }

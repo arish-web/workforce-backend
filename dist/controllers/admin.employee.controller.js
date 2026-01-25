@@ -23,33 +23,6 @@ const createEmployee = async (req, res) => {
     res.status(201).json(user);
 };
 exports.createEmployee = createEmployee;
-/**
- * LIST EMPLOYEES WITH FILTERS
- * ?role=&location=&status=
- */
-// export const listEmployees = async (req: Request, res: Response) => {
-//   const role =
-//     typeof req.query.role === "string" ? (req.query.role as Role) : undefined;
-//   const locationId =
-//     typeof req.query.location === "string" ? req.query.location : undefined;
-//   const status =
-//     typeof req.query.status === "string" ? req.query.status : undefined;
-//   const users = await prisma.user.findMany({
-//     where: {
-//       role,
-//       locationId,
-//       isActive:
-//         status === "active" ? true : status === "inactive" ? false : undefined,
-//     },
-//     include: {
-//       location: true,
-//     },
-//     orderBy: {
-//       createdAt: "desc",
-//     },
-//   });
-//   res.json(users);
-// };
 const listEmployees = async (req, res) => {
     const { role, location, status, page = "1", limit = "10" } = req.query;
     const pageNum = Number(page);
