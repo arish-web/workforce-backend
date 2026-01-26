@@ -11,7 +11,6 @@ import employeeRoutes from "./api/v1/employee.routes";
 import { errorHandler } from "./middlewares/error.middleware";
 
 
-
 const app = express();
 
 app.use(cors({ origin: "*", credentials: true }));
