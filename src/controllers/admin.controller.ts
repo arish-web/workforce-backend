@@ -144,3 +144,32 @@ export const listLocations = async (_req: Request, res: Response) => {
 
   res.json(locations);
 };
+
+
+
+export const getAdminSummary = async (_req: Request, res: Response) => {
+  try {
+    const [
+      totalEmployees,
+      totalManagers,
+      totalTasks,
+    ] = await prisma.$transaction([
+      prisma.user.count({
+        where: { role: "EMPLOYEE", isActive: true },
+      }),
+      prisma.user.count({
+        where: { role: "MANAGER", isActive: true },
+      }),
+      prisma.task.count(),
+    ]);
+
+    res.json({
+      totalEmployees,
+      totalManagers,
+      totalTasks,
+    });
+  } catch (error) {
+    console.error("ADMIN SUMMARY ERROR:", error);
+    res.status(500).json({ message: "Failed to load admin summary" });
+  }
+};

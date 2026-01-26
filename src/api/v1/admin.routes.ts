@@ -7,6 +7,7 @@ import {
   toggleEmployeeStatus,
   createLocation,
   listLocations,
+  getAdminSummary
 } from "../../controllers/admin.controller";
 
 const router = Router();
@@ -18,6 +19,7 @@ router.use((requireAuth as any)(["ADMIN"]));
 /* EMPLOYEES */
 router.post("/employees", createEmployee);
 router.get("/employees", listEmployees);
+router.get("/summary", getAdminSummary);
 router.patch("/employees/:id", updateEmployee);
 router.patch("/employees/:id/status", toggleEmployeeStatus);
 
