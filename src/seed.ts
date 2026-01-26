@@ -4,11 +4,16 @@ import bcrypt from "bcryptjs";
 async function main() {
   const password = await bcrypt.hash("12345678", 10);
 
+  // ✅ Create ONE organization
+  const org = await prisma.organization.create({
+    data: {
+      name: "Standard Insights",
+    },
+  });
+
   // ADMIN
-  await prisma.user.upsert({
-    where: { email: "admin@gmail.com" },
-    update: {},
-    create: {
+  await prisma.user.create({
+    data: {
       email: "admin@gmail.com",
       password,
       role: "ADMIN",
@@ -16,10 +21,8 @@ async function main() {
   });
 
   // MANAGER
-  await prisma.user.upsert({
-    where: { email: "manager@gmail.com" },
-    update: {},
-    create: {
+  await prisma.user.create({
+    data: {
       email: "manager@gmail.com",
       password,
       role: "MANAGER",
@@ -27,24 +30,17 @@ async function main() {
   });
 
   // EMPLOYEE
-  await prisma.user.upsert({
-    where: { email: "employee@gmail.com" },
-    update: {},
-    create: {
+  await prisma.user.create({
+    data: {
       email: "employee@gmail.com",
       password,
       role: "EMPLOYEE",
     },
   });
 
-  console.log("Seeded: ADMIN, MANAGER, EMPLOYEE");
+  console.log("Seeded clean DB with 1 org + users");
 }
 
 main()
-  .catch((e) => {
-    console.error(e);
-    process.exit(1);
-  })
-  .finally(async () => {
-    await prisma.$disconnect();
-  });
+  .catch(console.error)
+  .finally(() => prisma.$disconnect());

@@ -3,11 +3,51 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.getManagerEmployees = exports.createManagerTask = exports.getManagerDashboardSummary = exports.getManagerTasks = void 0;
 const prisma_1 = require("../config/prisma");
 /* ================= GET TASKS ================= */
+// export const getManagerTasks = async (req: AuthRequest, res: Response) => {
+//   try {
+//     const managerId = req.user!.userId;
+//     const tasks = await prisma.task.findMany({
+//       where: { managerId } as any,
+//       include: {
+//         assignedTo: {
+//           select: { id: true, email: true },
+//         },
+//       },
+//       orderBy: { createdAt: "desc" },
+//     });
+//     return res.json(
+//       tasks.map((t: any) => ({
+//         id: t.id,
+//         title: t.title,
+//         status: t.status,
+//         priority: t.priority,
+//         dueDate: t.dueDate,
+//         assignedTo: t.assignedTo,
+//       })),
+//     );
+//   } catch (err) {
+//     console.error("GET MANAGER TASKS ERROR:", err);
+//     return res.status(500).json({ message: "Failed to fetch tasks" });
+//   }
+// };
 const getManagerTasks = async (req, res) => {
     try {
         const managerId = req.user.userId;
+        const page = Math.max(Number(req.query.page) || 1, 1);
+        const limit = Math.min(Number(req.query.limit) || 10, 100);
+        const skip = (page - 1) * limit;
+        const status = req.query.status;
+        // ✅ FIX: include status when provided
+        const where = {
+            managerId,
+            ...(status ? { status } : {}),
+        };
+        // ✅ total MUST respect filters
+        const total = await prisma_1.prisma.task.count({ where });
         const tasks = await prisma_1.prisma.task.findMany({
-            where: { managerId },
+            where,
+            skip,
+            take: limit,
             include: {
                 assignedTo: {
                     select: { id: true, email: true },
@@ -15,14 +55,19 @@ const getManagerTasks = async (req, res) => {
             },
             orderBy: { createdAt: "desc" },
         });
-        return res.json(tasks.map((t) => ({
-            id: t.id,
-            title: t.title,
-            status: t.status,
-            priority: t.priority,
-            dueDate: t.dueDate,
-            assignedTo: t.assignedTo,
-        })));
+        return res.json({
+            data: tasks.map((t) => ({
+                id: t.id,
+                title: t.title,
+                status: t.status,
+                priority: t.priority,
+                dueDate: t.dueDate,
+                assignedTo: t.assignedTo,
+            })),
+            page,
+            limit,
+            total,
+        });
     }
     catch (err) {
         console.error("GET MANAGER TASKS ERROR:", err);

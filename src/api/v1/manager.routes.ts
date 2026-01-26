@@ -10,6 +10,7 @@ import {
 const router = Router();
 
 // 🔐 manager-only access
+router.use(requireAuth());
 router.use((requireAuth as any)(["MANAGER"]));
 // router.use(requireAuth(["MANAGER"]));
 

@@ -5,6 +5,7 @@ const auth_middleware_1 = require("../../middlewares/auth.middleware");
 const manager_controller_1 = require("../../controllers/manager.controller");
 const router = (0, express_1.Router)();
 // 🔐 manager-only access
+router.use((0, auth_middleware_1.requireAuth)());
 router.use(auth_middleware_1.requireAuth(["MANAGER"]));
 // router.use(requireAuth(["MANAGER"]));
 // routes

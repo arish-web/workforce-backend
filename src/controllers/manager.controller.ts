@@ -4,12 +4,60 @@ import { AuthRequest } from "../middlewares/auth.middleware";
 
 /* ================= GET TASKS ================= */
 
+// export const getManagerTasks = async (req: AuthRequest, res: Response) => {
+//   try {
+//     const managerId = req.user!.userId;
+
+//     const tasks = await prisma.task.findMany({
+//       where: { managerId } as any,
+//       include: {
+//         assignedTo: {
+//           select: { id: true, email: true },
+//         },
+//       },
+//       orderBy: { createdAt: "desc" },
+//     });
+
+//     return res.json(
+//       tasks.map((t: any) => ({
+//         id: t.id,
+//         title: t.title,
+//         status: t.status,
+//         priority: t.priority,
+//         dueDate: t.dueDate,
+//         assignedTo: t.assignedTo,
+//       })),
+//     );
+//   } catch (err) {
+//     console.error("GET MANAGER TASKS ERROR:", err);
+//     return res.status(500).json({ message: "Failed to fetch tasks" });
+//   }
+// };
+
+
 export const getManagerTasks = async (req: AuthRequest, res: Response) => {
   try {
     const managerId = req.user!.userId;
 
+    const page = Math.max(Number(req.query.page) || 1, 1);
+    const limit = Math.min(Number(req.query.limit) || 10, 100);
+    const skip = (page - 1) * limit;
+
+    const status = req.query.status as string | undefined;
+
+    // ✅ FIX: include status when provided
+    const where: any = {
+      managerId,
+      ...(status ? { status } : {}),
+    };
+
+    // ✅ total MUST respect filters
+    const total = await prisma.task.count({ where });
+
     const tasks = await prisma.task.findMany({
-      where: { managerId } as any,
+      where,
+      skip,
+      take: limit,
       include: {
         assignedTo: {
           select: { id: true, email: true },
@@ -18,8 +66,8 @@ export const getManagerTasks = async (req: AuthRequest, res: Response) => {
       orderBy: { createdAt: "desc" },
     });
 
-    return res.json(
-      tasks.map((t: any) => ({
+    return res.json({
+      data: tasks.map((t) => ({
         id: t.id,
         title: t.title,
         status: t.status,
@@ -27,12 +75,16 @@ export const getManagerTasks = async (req: AuthRequest, res: Response) => {
         dueDate: t.dueDate,
         assignedTo: t.assignedTo,
       })),
-    );
+      page,
+      limit,
+      total,
+    });
   } catch (err) {
     console.error("GET MANAGER TASKS ERROR:", err);
     return res.status(500).json({ message: "Failed to fetch tasks" });
   }
 };
+
 
 export const getManagerDashboardSummary = async (
   req: AuthRequest,
